@@ -55,6 +55,11 @@ def calculate_speed():
                                   f"Accuracy: {correct_chars}/{total_chars} characters ({accuracy}%)")
     reset()
 
+# Trigger submit on Enter
+def on_enter_press(event):
+    calculate_speed()
+    return "break"  # Prevent newline in Text widget
+
 # Reset test
 def reset():
     global start_time, selected_phrase
@@ -91,6 +96,7 @@ label_phrase.pack(pady=(0, 15))
 entry = tk.Text(frame, height=5, width=70, font=font_main, wrap="word", bd=2, relief="sunken")
 entry.pack(pady=(0, 10))
 entry.bind("<KeyPress>", start_test)
+entry.bind("<Return>", on_enter_press)  # Submit on Enter key
 
 button_frame = tk.Frame(frame, bg="#f0f4f8")
 button_frame.pack(pady=10)
