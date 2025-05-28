@@ -4,7 +4,7 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter import messagebox
 
-# Sample sentences
+#Sample sentences
 phrases = [
     "The sun shines on the snowy mountains.",
     "Python is a versatile programming language.",
@@ -16,9 +16,9 @@ phrases = [
 start_time = None
 timer_running = False
 selected_phrase = random.choice(phrases)
-timer_job = None  # for after_cancel
+timer_job = None
 
-def start_test(event):
+def start_test(event=None):
     global start_time, timer_running
     if start_time is None:
         start_time = time.time()
@@ -32,6 +32,17 @@ def update_timer():
         timer_label.config(text=f"Time elapsed: {elapsed:.1f} sec")
         timer_job = app.after(100, update_timer)
 
+def highlight_errors():
+    typed = entry.get("1.0", "end-1c")
+    entry.tag_remove("error", "1.0", "end")
+
+    for i in range(min(len(typed), len(selected_phrase))):
+        if typed[i] != selected_phrase[i]:
+            pos = f"1.{i}"
+            entry.tag_add("error", pos, f"1.{i+1}")
+    if len(typed) > len(selected_phrase):
+        entry.tag_add("error", f"1.{len(selected_phrase)}", f"1.{len(typed)}")
+
 def calculate_speed():
     global start_time, timer_running, timer_job
     if start_time is None:
@@ -43,7 +54,7 @@ def calculate_speed():
     timer_running = False
 
     end_time = time.time()
-    typed_text = entry.get("1.0", "end").strip()
+    typed_text = entry.get("1.0", "end-1c")
     time_taken = end_time - start_time
 
     if time_taken == 0:
@@ -62,6 +73,10 @@ def calculate_speed():
                                   f"Accuracy: {correct_chars}/{total_chars} characters ({accuracy}%)")
     reset()
 
+def on_key_press(event):
+    start_test()
+    highlight_errors()
+
 def on_enter_press(event):
     calculate_speed()
     return "break"
@@ -75,6 +90,7 @@ def reset():
     selected_phrase = random.choice(phrases)
     label_phrase.config(text=selected_phrase)
     entry.delete("1.0", "end")
+    entry.tag_remove("error", "1.0", "end")
     timer_label.config(text="Time elapsed: 0.0 sec")
 
 # --- UI Setup ---
@@ -95,8 +111,9 @@ label_phrase.pack(pady=(0, 10))
 
 entry = ttk.Text(main_frame, height=4, width=70, font=("Segoe UI", 12), wrap="word")
 entry.pack(pady=(0, 10))
-entry.bind("<KeyPress>", start_test)
+entry.bind("<KeyRelease>", on_key_press)
 entry.bind("<Return>", on_enter_press)
+entry.tag_config("error", foreground="red")
 
 timer_label = ttk.Label(main_frame, text="Time elapsed: 0.0 sec", font=("Segoe UI", 11, "italic"), foreground="#555")
 timer_label.pack(pady=(0, 10))
