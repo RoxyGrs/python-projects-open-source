@@ -14,18 +14,33 @@ phrases = [
 ]
 
 start_time = None
+timer_running = False
 selected_phrase = random.choice(phrases)
+timer_job = None  # for after_cancel
 
 def start_test(event):
-    global start_time
+    global start_time, timer_running
     if start_time is None:
         start_time = time.time()
+        timer_running = True
+        update_timer()
+
+def update_timer():
+    global timer_job
+    if timer_running and start_time is not None:
+        elapsed = time.time() - start_time
+        timer_label.config(text=f"Time elapsed: {elapsed:.1f} sec")
+        timer_job = app.after(100, update_timer)
 
 def calculate_speed():
-    global start_time
+    global start_time, timer_running, timer_job
     if start_time is None:
         messagebox.showwarning("Warning", "Start typing before submitting!")
         return
+
+    if timer_job:
+        app.after_cancel(timer_job)
+    timer_running = False
 
     end_time = time.time()
     typed_text = entry.get("1.0", "end").strip()
@@ -52,16 +67,20 @@ def on_enter_press(event):
     return "break"
 
 def reset():
-    global start_time, selected_phrase
+    global start_time, selected_phrase, timer_running, timer_job
+    if timer_job:
+        app.after_cancel(timer_job)
+    timer_running = False
     start_time = None
     selected_phrase = random.choice(phrases)
     label_phrase.config(text=selected_phrase)
     entry.delete("1.0", "end")
+    timer_label.config(text="Time elapsed: 0.0 sec")
 
 # --- UI Setup ---
 app = ttk.Window(themename="flatly")
 app.title("Typing Speed Test")
-app.geometry("600x400")
+app.geometry("600x420")
 app.resizable(False, False)
 
 main_frame = ttk.Frame(app, padding=20)
@@ -78,6 +97,9 @@ entry = ttk.Text(main_frame, height=4, width=70, font=("Segoe UI", 12), wrap="wo
 entry.pack(pady=(0, 10))
 entry.bind("<KeyPress>", start_test)
 entry.bind("<Return>", on_enter_press)
+
+timer_label = ttk.Label(main_frame, text="Time elapsed: 0.0 sec", font=("Segoe UI", 11, "italic"), foreground="#555")
+timer_label.pack(pady=(0, 10))
 
 btn_frame = ttk.Frame(main_frame)
 btn_frame.pack(pady=10)
