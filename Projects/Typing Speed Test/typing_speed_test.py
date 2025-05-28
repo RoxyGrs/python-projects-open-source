@@ -1,7 +1,8 @@
-import tkinter as tk
-from tkinter import messagebox
 import time
 import random
+import ttkbootstrap as ttk
+from ttkbootstrap.constants import *
+from tkinter import messagebox
 
 # Sample sentences
 phrases = [
@@ -12,7 +13,6 @@ phrases = [
     "The algorithm sorts the data efficiently."
 ]
 
-# Global variables
 start_time = None
 selected_phrase = random.choice(phrases)
 
@@ -28,15 +28,14 @@ def calculate_speed():
         return
 
     end_time = time.time()
-    typed_text = entry.get("1.0", tk.END).strip()
+    typed_text = entry.get("1.0", "end").strip()
     time_taken = end_time - start_time
 
     if time_taken == 0:
         messagebox.showerror("Error", "Invalid time. Please try again.")
         return
 
-    words_typed = typed_text.split()
-    word_count = len(words_typed)
+    word_count = len(typed_text.split())
     wpm = round((word_count / time_taken) * 60)
 
     correct_chars = sum(1 for i in range(min(len(typed_text), len(selected_phrase))) if typed_text[i] == selected_phrase[i])
@@ -57,57 +56,34 @@ def reset():
     start_time = None
     selected_phrase = random.choice(phrases)
     label_phrase.config(text=selected_phrase)
-    entry.delete("1.0", tk.END)
+    entry.delete("1.0", "end")
 
-def quit_app():
-    root.destroy()
+# --- UI Setup ---
+app = ttk.Window(themename="flatly")
+app.title("Typing Speed Test")
+app.geometry("600x400")
+app.resizable(False, False)
 
-# ---------- GUI ----------
-root = tk.Tk()
-root.title("⏱️ Typing Speed Test")
-root.configure(bg="#f0f4f8")
-root.resizable(False, False)
+main_frame = ttk.Frame(app, padding=20)
+main_frame.pack(fill=BOTH, expand=True)
 
-font_main = ("Segoe UI", 12)
-font_title = ("Segoe UI", 16, "bold")
+ttk.Label(main_frame, text="Type the sentence below as fast and accurately as possible:",
+          font=("Segoe UI", 12)).pack(pady=(0, 10))
 
-frame = tk.Frame(root, bg="#f0f4f8", padx=20, pady=20)
-frame.pack()
-
-label_instruction = tk.Label(frame, text="Type the sentence below as fast and accurately as possible:",
-                             font=font_main, bg="#f0f4f8")
-label_instruction.pack(pady=(0, 10))
-
-label_phrase = tk.Label(frame, text=selected_phrase, wraplength=500,
-                        font=("Segoe UI", 14), fg="#2c3e50", bg="#dfe6e9",
-                        bd=2, relief="solid", padx=10, pady=10)
+label_phrase = ttk.Label(main_frame, text=selected_phrase, wraplength=560,
+                         font=("Segoe UI", 14), style="info.TLabel", padding=10)
 label_phrase.pack(pady=(0, 10))
 
-entry = tk.Text(frame, height=4, width=60, font=font_main, wrap="word", bd=2, relief="sunken")
+entry = ttk.Text(main_frame, height=4, width=70, font=("Segoe UI", 12), wrap="word")
 entry.pack(pady=(0, 10))
 entry.bind("<KeyPress>", start_test)
 entry.bind("<Return>", on_enter_press)
 
-button_frame = tk.Frame(frame, bg="#f0f4f8")
-button_frame.pack(pady=5)
+btn_frame = ttk.Frame(main_frame)
+btn_frame.pack(pady=10)
 
-btn_style = {"font": ("Segoe UI", 11), "padx": 10, "pady": 4, "bd": 0, "width": 10}
+ttk.Button(btn_frame, text="Submit", bootstyle=PRIMARY, command=calculate_speed).grid(row=0, column=0, padx=5)
+ttk.Button(btn_frame, text="Reset", bootstyle=SUCCESS, command=reset).grid(row=0, column=1, padx=5)
+ttk.Button(btn_frame, text="Quit", bootstyle=DANGER, command=app.destroy).grid(row=0, column=2, padx=5)
 
-btn_submit = tk.Button(button_frame, text="Submit", command=calculate_speed, bg="#74b9ff", fg="white", **btn_style)
-btn_submit.grid(row=0, column=0, padx=4)
-
-btn_reset = tk.Button(button_frame, text="Reset", command=reset, bg="#55efc4", fg="black", **btn_style)
-btn_reset.grid(row=0, column=1, padx=4)
-
-btn_quit = tk.Button(button_frame, text="Quit", command=quit_app, bg="#fab1a0", fg="black", **btn_style)
-btn_quit.grid(row=0, column=2, padx=4)
-
-for btn in [btn_submit, btn_reset, btn_quit]:
-    btn.bind("<Enter>", lambda e, b=btn: b.config(relief="groove"))
-    btn.bind("<Leave>", lambda e, b=btn: b.config(relief="flat"))
-
-# Auto-size the window to fit contents
-root.update_idletasks()
-root.geometry(f"{frame.winfo_reqwidth() + 40}x{frame.winfo_reqheight() + 40}")
-
-root.mainloop()
+app.mainloop()

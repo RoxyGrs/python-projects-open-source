@@ -12,7 +12,15 @@ This is a great tool to practice and improve your typing skills in a fun and int
 
 ### Prerequisites
 
-This script uses only built-in Python libraries. No external installations are required.
+This script uses one external library:
+
+- `ttkbootstrap` — for a modern themed interface (built on `tkinter`)
+
+You can install it via pip:
+
+```bash
+pip install ttkbootstrap
+```
 
 **Modules used:**
 - `tkinter` — for the graphical user interface (included with Python)
