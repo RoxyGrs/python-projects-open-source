@@ -67,27 +67,48 @@ def reset():
 def quit_app():
     root.destroy()
 
-# GUI
+# ---------- GUI ----------
 root = tk.Tk()
 root.title("⏱️ Typing Speed Test")
+root.configure(bg="#f0f4f8")
+root.geometry("750x500")
+root.resizable(False, False)
 
-label_instruction = tk.Label(root, text="Type the sentence below as fast and accurately as possible:", font=("Arial", 14))
-label_instruction.pack(pady=10)
+font_main = ("Segoe UI", 14)
+font_title = ("Segoe UI", 18, "bold")
 
-label_phrase = tk.Label(root, text=selected_phrase, wraplength=600, font=("Arial", 16), fg="blue")
-label_phrase.pack(pady=10)
+frame = tk.Frame(root, bg="#f0f4f8")
+frame.pack(padx=20, pady=20)
 
-entry = tk.Text(root, height=5, width=60, font=("Arial", 14))
-entry.pack(pady=10)
+label_instruction = tk.Label(frame, text="Type the sentence below as fast and accurately as possible:",
+                             font=font_main, bg="#f0f4f8")
+label_instruction.pack(pady=(0, 10))
+
+label_phrase = tk.Label(frame, text=selected_phrase, wraplength=700,
+                        font=("Segoe UI", 16), fg="#2c3e50", bg="#dfe6e9", bd=2, relief="solid", padx=10, pady=10)
+label_phrase.pack(pady=(0, 15))
+
+entry = tk.Text(frame, height=5, width=70, font=font_main, wrap="word", bd=2, relief="sunken")
+entry.pack(pady=(0, 10))
 entry.bind("<KeyPress>", start_test)
 
-btn_submit = tk.Button(root, text="Submit", command=calculate_speed, font=("Arial", 12))
-btn_submit.pack(pady=5)
+button_frame = tk.Frame(frame, bg="#f0f4f8")
+button_frame.pack(pady=10)
 
-btn_reset = tk.Button(root, text="Reset", command=reset, font=("Arial", 12))
-btn_reset.pack(pady=5)
+btn_style = {"font": ("Segoe UI", 12), "padx": 15, "pady": 5, "bd": 0, "width": 12}
 
-btn_quit = tk.Button(root, text="Quit", command=quit_app, font=("Arial", 12))
-btn_quit.pack(pady=5)
+btn_submit = tk.Button(button_frame, text="Submit", command=calculate_speed, bg="#74b9ff", fg="white", **btn_style)
+btn_submit.grid(row=0, column=0, padx=5)
+
+btn_reset = tk.Button(button_frame, text="Reset", command=reset, bg="#55efc4", fg="black", **btn_style)
+btn_reset.grid(row=0, column=1, padx=5)
+
+btn_quit = tk.Button(button_frame, text="Quit", command=quit_app, bg="#fab1a0", fg="black", **btn_style)
+btn_quit.grid(row=0, column=2, padx=5)
+
+# Hover effect
+for btn in [btn_submit, btn_reset, btn_quit]:
+    btn.bind("<Enter>", lambda e, b=btn: b.config(relief="groove"))
+    btn.bind("<Leave>", lambda e, b=btn: b.config(relief="flat"))
 
 root.mainloop()
