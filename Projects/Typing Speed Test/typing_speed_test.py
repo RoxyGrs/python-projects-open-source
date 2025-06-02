@@ -4,6 +4,8 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from tkinter import messagebox
 
+# Matthias
+
 #Sample sentences
 phrases = [
     "The sun shines on the snowy mountains.",
