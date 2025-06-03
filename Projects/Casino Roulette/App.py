@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, font
 import random
 
 def get_color(number):
@@ -18,21 +18,14 @@ def tourner_roulette(pari_type, mise, capital, details):
     gain = 0
 
     if pari_type == "plein":
-        # details = liste de numéros joués
         if numero in details:
-            # Chaque numéro misé paie 35 fois la mise / nombre de numéros joués
-            # On peut faire la mise totale répartie ou la mise par numéro ?
-            # Ici on considère la mise totale répartie uniformément
             gain = mise * 35 / len(details)
-
     elif pari_type == "couleur":
         if couleur.lower() == details[0]:
             gain = mise * 2
-
     elif pari_type == "pair":
         if numero != 0 and numero % 2 == 0:
             gain = mise * 2
-
     elif pari_type == "impair":
         if numero != 0 and numero % 2 == 1:
             gain = mise * 2
@@ -51,35 +44,55 @@ class RouletteApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Roulette Casino")
+        self.root.geometry("400x400")
+        self.root.configure(bg="#f0f4f8")
+
         self.capital = 100
 
-        self.label_capital = tk.Label(root, text=f"Capital : {self.capital}€")
-        self.label_capital.pack()
+        self.custom_font = font.Font(family="Helvetica", size=12)
+        self.title_font = font.Font(family="Helvetica", size=16, weight="bold")
+
+        self.label_title = tk.Label(root, text="🎰 Roulette Casino 🎰", font=self.title_font, bg="#f0f4f8", fg="#2c3e50")
+        self.label_title.pack(pady=15)
+
+        self.label_capital = tk.Label(root, text=f"Capital : {self.capital}€", font=self.custom_font, bg="#f0f4f8", fg="#34495e")
+        self.label_capital.pack(pady=5)
 
         self.pari_type_var = tk.StringVar(value="plein")
-        self.entry_details = tk.Entry(root)
-        self.entry_mise = tk.Entry(root)
 
-        self.setup_interface()
+        # Frame pour le choix des options
+        frame_options = tk.Frame(root, bg="#f0f4f8")
+        frame_options.pack(pady=10, fill="x", padx=30)
 
-    def setup_interface(self):
-        tk.Label(self.root, text="Type de mise :").pack()
+        tk.Label(frame_options, text="Type de mise :", font=self.custom_font, bg="#f0f4f8", fg="#34495e").grid(row=0, column=0, sticky="w")
         options = ["plein", "couleur", "pair", "impair"]
-        tk.OptionMenu(self.root, self.pari_type_var, *options).pack()
+        self.option_menu = tk.OptionMenu(frame_options, self.pari_type_var, *options, command=self.on_pari_change)
+        self.option_menu.config(font=self.custom_font, bg="white")
+        self.option_menu.grid(row=0, column=1, sticky="ew", padx=10)
 
-        tk.Label(self.root, text="Détails du pari :\n"
-                                 "- Pour 'plein' : entrez un ou plusieurs numéros séparés par des virgules (ex: 7,13,25)\n"
-                                 "- Pour 'couleur' : rouge ou noir\n"
-                                 "- Pour 'pair' ou 'impair' : laissez vide").pack()
-        self.entry_details.pack()
+        tk.Label(frame_options, text="Détails du pari :", font=self.custom_font, bg="#f0f4f8", fg="#34495e").grid(row=1, column=0, sticky="w", pady=8)
+        self.entry_details = tk.Entry(frame_options, font=self.custom_font)
+        self.entry_details.grid(row=1, column=1, sticky="ew", padx=10)
+        frame_options.columnconfigure(1, weight=1)
 
-        tk.Label(self.root, text="Mise en € :").pack()
-        self.entry_mise.pack()
+        tk.Label(root, text="Mise en € :", font=self.custom_font, bg="#f0f4f8", fg="#34495e").pack(anchor="w", padx=30, pady=(15, 5))
+        self.entry_mise = tk.Entry(root, font=self.custom_font)
+        self.entry_mise.pack(fill="x", padx=30)
 
-        tk.Button(self.root, text="Jouer", command=self.jouer).pack(pady=10)
+        self.btn_jouer = tk.Button(root, text="Jouer", font=self.custom_font, bg="#27ae60", fg="white", activebackground="#2ecc71", command=self.jouer)
+        self.btn_jouer.pack(pady=20, ipadx=10, ipady=5)
 
-        self.result_label = tk.Label(self.root, text="")
-        self.result_label.pack()
+        self.result_label = tk.Label(root, text="", font=self.custom_font, bg="#f0f4f8", fg="#2c3e50", wraplength=350, justify="left")
+        self.result_label.pack(padx=30, pady=10)
+
+        self.on_pari_change(self.pari_type_var.get())  # Pour gérer la désactivation de details au démarrage
+
+    def on_pari_change(self, value):
+        if value in ["pair", "impair"]:
+            self.entry_details.delete(0, tk.END)
+            self.entry_details.config(state="disabled")
+        else:
+            self.entry_details.config(state="normal")
 
     def jouer(self):
         try:
@@ -106,12 +119,11 @@ class RouletteApp:
                     raise ValueError("Couleur invalide.")
                 details = [raw_details]
             elif pari_type in ["pair", "impair"]:
-                # Pas besoin de détails
                 details = []
             else:
                 raise ValueError()
-        except:
-            messagebox.showerror("Erreur", "Détails du pari invalides.")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Détails du pari invalides.\n{e}")
             return
 
         self.capital, resultat = tourner_roulette(pari_type, mise, self.capital, details)
