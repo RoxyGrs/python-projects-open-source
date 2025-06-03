@@ -10,18 +10,29 @@ def get_color(number):
         return "Noir"
 
 # Fonction pour faire tourner la roulette
-def tourner_roulette(pari):
+def tourner_roulette(pari, mise, capital):
     numero = random.randint(0, 36)
     couleur = get_color(numero)
-    print(f"La bille est tombée sur : {numero} ({couleur})")
+    print(f"\n La bille est tombée sur : {numero} ({couleur})")
+
     if numero == pari:
-        print("🎉 Félicitations ! Vous avez gagné !")
+        gain = mise * 35
+        capital += gain
+        print(f" Bravo ! Vous avez gagné {gain}€ !")
     else:
-        print("😞 Perdu, réessayez !")
+        capital -= mise
+        print(f" Désolé, vous avez perdu {mise}€.")
+
+    print(f" Capital restant : {capital}€\n")
+    return capital
 
 # Lancer le programme
 if __name__ == "__main__":
-    while True:
+    capital = 100
+
+    print(" Bienvenue à la roulette ! Vous commencez avec 100€.\n")
+
+    while capital > 0:
         try:
             pari = int(input("Choisissez un chiffre entre 0 et 36 : "))
             if pari < 0 or pari > 36:
@@ -31,10 +42,23 @@ if __name__ == "__main__":
             print("Entrée invalide. Veuillez entrer un chiffre.")
             continue
 
-        input("Appuie sur Entrée pour faire tourner la roulette...")
-        tourner_roulette(pari)
-        
+        try:
+            mise = int(input(f"Combien voulez-vous miser ? (Capital : {capital}€) : "))
+            if mise <= 0 or mise > capital:
+                print("Mise invalide. Elle doit être supérieure à 0 et inférieure ou égale à votre capital.")
+                continue
+        except ValueError:
+            print("Entrée invalide. Veuillez entrer une somme d'argent.")
+            continue
+
+        input("Appuyez sur Entrée pour faire tourner la roulette...")
+        capital = tourner_roulette(pari, mise, capital)
+
+        if capital <= 0:
+            print(" Vous avez perdu tout votre argent. Fin de la partie.")
+            break
+
         rejouer = input("Voulez-vous rejouer ? (o/n) : ").lower()
         if rejouer != 'o':
-            print("Merci d'avoir joué !")
+            print(f" Fin de la partie. Capital final : {capital}€")
             break
