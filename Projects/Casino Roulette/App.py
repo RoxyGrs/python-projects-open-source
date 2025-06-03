@@ -18,24 +18,30 @@ def tourner_roulette(pari_type, mise, capital, details):
     gain = 0
 
     if pari_type == "plein":
+        # Retirer la mise pour chaque numéro parié
+        capital -= mise * len(details)
         if numero in details:
-            gain = mise * 35 / len(details)
+            gain = mise * 35
     elif pari_type == "couleur":
+        capital -= mise
         if couleur.lower() == details[0]:
             gain = mise * 2
     elif pari_type == "pair":
+        capital -= mise
         if numero != 0 and numero % 2 == 0:
             gain = mise * 2
     elif pari_type == "impair":
+        capital -= mise
         if numero != 0 and numero % 2 == 1:
             gain = mise * 2
 
-    capital += gain - mise
+    capital += gain
 
     if gain > 0:
         resultat += f"Bravo ! Vous avez gagné {gain:.2f}€ !\n"
     else:
-        resultat += f"Désolé, vous avez perdu {mise}€.\n"
+        montant_perdu = mise * (len(details) if pari_type == "plein" else 1)
+        resultat += f"Désolé, vous avez perdu {montant_perdu:.2f}€.\n"
 
     resultat += f"Capital restant : {capital:.2f}€"
     return capital, resultat
@@ -44,7 +50,7 @@ class RouletteApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Roulette Casino")
-        self.root.geometry("400x400")
+        self.root.geometry("400x430")
         self.root.configure(bg="#f0f4f8")
 
         self.capital = 100
@@ -58,14 +64,12 @@ class RouletteApp:
         self.label_capital = tk.Label(root, text=f"Capital : {self.capital}€", font=self.custom_font, bg="#f0f4f8", fg="#34495e")
         self.label_capital.pack(pady=5)
 
-        self.pari_type_var = tk.StringVar(value="plein")
-
-        # Frame pour le choix des options
         frame_options = tk.Frame(root, bg="#f0f4f8")
         frame_options.pack(pady=10, fill="x", padx=30)
 
         tk.Label(frame_options, text="Type de mise :", font=self.custom_font, bg="#f0f4f8", fg="#34495e").grid(row=0, column=0, sticky="w")
         options = ["plein", "couleur", "pair", "impair"]
+        self.pari_type_var = tk.StringVar(value=options[0])
         self.option_menu = tk.OptionMenu(frame_options, self.pari_type_var, *options, command=self.on_pari_change)
         self.option_menu.config(font=self.custom_font, bg="white")
         self.option_menu.grid(row=0, column=1, sticky="ew", padx=10)
@@ -85,28 +89,37 @@ class RouletteApp:
         self.result_label = tk.Label(root, text="", font=self.custom_font, bg="#f0f4f8", fg="#2c3e50", wraplength=350, justify="left")
         self.result_label.pack(padx=30, pady=10)
 
-        self.on_pari_change(self.pari_type_var.get())  # Pour gérer la désactivation de details au démarrage
+        # Label d’aide contextuelle
+        self.help_label = tk.Label(root, text="", font=("Helvetica", 10, "italic"), fg="#7f8c8d", bg="#f0f4f8", wraplength=350, justify="left")
+        self.help_label.pack(padx=30, pady=(0, 10))
+
+        self.on_pari_change(self.pari_type_var.get())
 
     def on_pari_change(self, value):
-        if value in ["pair", "impair"]:
+        if value == "plein":
+            self.entry_details.config(state="normal")
+            self.help_label.config(text="Entrez un ou plusieurs numéros séparés par des virgules (ex : 17,22,3). La mise sera appliquée à chaque numéro.")
+        elif value == "couleur":
+            self.entry_details.config(state="normal")
+            self.help_label.config(text="Entrez 'rouge' ou 'noir'.")
+        elif value == "pair":
             self.entry_details.delete(0, tk.END)
             self.entry_details.config(state="disabled")
+            self.help_label.config(text="Vous misez sur les numéros pairs. Aucun détail à entrer.")
+        elif value == "impair":
+            self.entry_details.delete(0, tk.END)
+            self.entry_details.config(state="disabled")
+            self.help_label.config(text="Vous misez sur les numéros impairs. Aucun détail à entrer.")
         else:
             self.entry_details.config(state="normal")
+            self.help_label.config(text="")
 
     def jouer(self):
         try:
             mise = float(self.entry_mise.get())
-            if mise <= 0 or mise > self.capital:
-                raise ValueError("Mise invalide.")
-        except ValueError:
-            messagebox.showerror("Erreur", "Entrez une mise valide.")
-            return
+            pari_type = self.pari_type_var.get()
+            raw_details = self.entry_details.get().strip().lower()
 
-        pari_type = self.pari_type_var.get()
-        raw_details = self.entry_details.get().strip().lower()
-
-        try:
             if pari_type == "plein":
                 if not raw_details:
                     raise ValueError("Entrez au moins un numéro.")
@@ -114,16 +127,22 @@ class RouletteApp:
                 for num in details:
                     if num < 0 or num > 36:
                         raise ValueError("Numéro de plein invalide.")
-            elif pari_type == "couleur":
+                mise_totale = mise * len(details)
+            else:
+                mise_totale = mise
+
+            if mise_totale <= 0 or mise_totale > self.capital:
+                raise ValueError("Mise invalide ou insuffisante pour couvrir tous les paris.")
+
+            if pari_type == "couleur":
                 if raw_details not in ["rouge", "noir"]:
                     raise ValueError("Couleur invalide.")
                 details = [raw_details]
             elif pari_type in ["pair", "impair"]:
                 details = []
-            else:
-                raise ValueError()
+
         except Exception as e:
-            messagebox.showerror("Erreur", f"Détails du pari invalides.\n{e}")
+            messagebox.showerror("Erreur", f"Erreur dans la mise ou les détails du pari.\n{e}")
             return
 
         self.capital, resultat = tourner_roulette(pari_type, mise, self.capital, details)
