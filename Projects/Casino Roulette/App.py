@@ -4,27 +4,24 @@ import random
 
 def get_color(number):
     if number == 0:
-        return "Vert"
+        return "green"
     elif number in [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]:
-        return "Rouge"
+        return "red"
     else:
-        return "Noir"
+        return "black"
 
 def tourner_roulette(pari_type, mise, capital, details):
     numero = random.randint(0, 36)
     couleur = get_color(numero)
-    resultat = f"La bille est tombée sur : {numero} ({couleur})\n"
-
     gain = 0
 
     if pari_type == "plein":
-        # Retirer la mise pour chaque numéro parié
         capital -= mise * len(details)
         if numero in details:
             gain = mise * 35
     elif pari_type == "couleur":
         capital -= mise
-        if couleur.lower() == details[0]:
+        if couleur == details[0]:
             gain = mise * 2
     elif pari_type == "pair":
         capital -= mise
@@ -38,19 +35,18 @@ def tourner_roulette(pari_type, mise, capital, details):
     capital += gain
 
     if gain > 0:
-        resultat += f"Bravo ! Vous avez gagné {gain:.2f}€ !\n"
+        message = f"Bravo ! Vous avez gagné {gain:.2f}€ !\n"
     else:
         montant_perdu = mise * (len(details) if pari_type == "plein" else 1)
-        resultat += f"Désolé, vous avez perdu {montant_perdu:.2f}€.\n"
+        message = f"Désolé, vous avez perdu {montant_perdu:.2f}€.\n"
 
-    resultat += f"Capital restant : {capital:.2f}€"
-    return capital, resultat
+    return capital, numero, couleur, message
 
 class RouletteApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Roulette Casino")
-        self.root.geometry("400x530")
+        self.root.geometry("400x630")
         self.root.configure(bg="#f0f4f8")
 
         self.capital = 100
@@ -86,10 +82,13 @@ class RouletteApp:
         self.btn_jouer = tk.Button(root, text="Jouer", font=self.custom_font, bg="#27ae60", fg="white", activebackground="#2ecc71", command=self.jouer)
         self.btn_jouer.pack(pady=20, ipadx=10, ipady=5)
 
+        # Canvas pour afficher le carré avec numéro
+        self.canvas = tk.Canvas(root, width=100, height=100, bg="#f0f4f8", highlightthickness=0)
+        self.canvas.pack(pady=5)
+
         self.result_label = tk.Label(root, text="", font=self.custom_font, bg="#f0f4f8", fg="#2c3e50", wraplength=350, justify="left")
         self.result_label.pack(padx=30, pady=10)
 
-        # Label d’aide contextuelle
         self.help_label = tk.Label(root, text="", font=("Helvetica", 10, "italic"), fg="#7f8c8d", bg="#f0f4f8", wraplength=350, justify="left")
         self.help_label.pack(padx=30, pady=(0, 10))
 
@@ -113,6 +112,14 @@ class RouletteApp:
         else:
             self.entry_details.config(state="normal")
             self.help_label.config(text="")
+
+    def dessiner_carre(self, numero, couleur):
+        self.canvas.delete("all")
+        taille = 100
+        # Dessiner carré coloré
+        self.canvas.create_rectangle(5, 5, taille-5, taille-5, fill=couleur, outline="black", width=2)
+        # Afficher le numéro au centre en blanc
+        self.canvas.create_text(taille//2, taille//2, text=str(numero), fill="white", font=("Helvetica", 36, "bold"))
 
     def jouer(self):
         try:
@@ -145,9 +152,16 @@ class RouletteApp:
             messagebox.showerror("Erreur", f"Erreur dans la mise ou les détails du pari.\n{e}")
             return
 
-        self.capital, resultat = tourner_roulette(pari_type, mise, self.capital, details)
+        self.capital, numero, couleur, resultat = tourner_roulette(pari_type, mise, self.capital, details)
+        # Mise à jour du capital en haut
         self.label_capital.config(text=f"Capital : {self.capital:.2f}€")
+
+        # Ici, on supprime la phrase "Capital restant" dans le texte de résultat
+        # Affiche le message résultat (sans capital)
         self.result_label.config(text=resultat)
+
+        # Dessine le carré avec numéro
+        self.dessiner_carre(numero, couleur)
 
         if self.capital <= 0:
             messagebox.showinfo("Fin", "Vous avez perdu tout votre argent.")
