@@ -46,7 +46,7 @@ class RouletteApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Roulette Casino")
-        self.root.geometry("400x580")
+        self.root.geometry("400x630")
         self.root.configure(bg="#f0f4f8")
 
         self.capital = 100
